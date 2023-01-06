@@ -3,7 +3,6 @@ package com.github.q16695.modules
 import com.github.q16695.Main
 import com.github.q16695.events.EventHandler
 import com.github.q16695.events.MouseEvent
-import com.github.q16695.events.TickEvent
 import com.github.q16695.managers.TranslateManager
 import com.github.q16695.utils.Key
 import java.awt.Color
@@ -24,7 +23,7 @@ class RightModule : EmptyModule(true) {
                 Main.Instance!!.frame.remove(J)
             }
             visibleButtons.clear()
-            val up = JButton(TranslateManager.getTranslate(Key("exit", this)))
+            val up = JButton(TranslateManager.getTranslate("${this.javaClass.name}.exit"))
             up.foreground = Color.RED
             up.isOpaque = true
             up.background = Color.WHITE
@@ -37,7 +36,6 @@ class RightModule : EmptyModule(true) {
                 override fun mousePressed(e: java.awt.event.MouseEvent) {
                     Main.Instance!!.frame.isVisible = false
                 }
-
                 override fun mouseReleased(e: java.awt.event.MouseEvent) {}
                 override fun mouseEntered(e: java.awt.event.MouseEvent) {}
                 override fun mouseExited(e: java.awt.event.MouseEvent) {}
@@ -46,7 +44,7 @@ class RightModule : EmptyModule(true) {
     }
 
     @EventHandler
-    fun onTickEvent(event: TickEvent?) {
+    fun onTickEvent() {
         if (Main.Instance!!.selectJLabel == null) {
             for (c in Main.Instance!!.helpList) {
                 Main.Instance!!.frame.remove(c)

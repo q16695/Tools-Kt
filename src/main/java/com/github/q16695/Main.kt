@@ -2,22 +2,22 @@ package com.github.q16695
 
 import com.github.q16695.commands.*
 import com.github.q16695.events.*
+import com.github.q16695.managers.ConfigManager
 import com.github.q16695.managers.EventManager
+import com.github.q16695.managers.LogManager
 import com.github.q16695.managers.TranslateManager
-import com.github.q16695.utils.FileUtils
-import com.github.q16695.utils.Integer
-import com.github.q16695.utils.MessageUtils
+import com.github.q16695.utils.*
 import java.awt.*
 import java.awt.event.KeyEvent
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.File
-import java.lang.annotation.Native
 import java.net.URL
 import java.sql.Date
 import java.time.Instant
 import java.util.*
 import javax.swing.*
+import kotlin.collections.ArrayList
 
 class Main {
     var The_Core_Values_Of_Chinese_Socialism = ArrayList<String>()
@@ -29,15 +29,17 @@ class Main {
     var frame = JFrame("Small Tools")
     var icon: ImageIcon
     var textFont: Font
+    var configmanager = ConfigManager()
     var color = Color.ORANGE
     var selectJLabel: JButton? = null
     var enteredString: String? = null
     var command = JTextField(20)
     var TCVOCS = 0
+    var antiblur = AntiBlur
     var clickedList = ArrayList<JLabel>()
     var extra = ArrayList<JLabel>()
     var time = JLabel("Time" + Date.from(Instant.now()))
-    var basicCommands: ArrayList<BasicCommand> = ArrayList<BasicCommand>()
+    var basicCommands: ArrayList<BasicCommand> = ArrayList()
     var lastCommandText: String? = null
     var currentCommandText: String? = null
     var translateFile = "en_US"
@@ -50,6 +52,7 @@ class Main {
         var Instance: Main? = null
         var notification = false
         var mainName = "Small Tools"
+        var ready = false
     }
 
     var mouseInFrame = false
@@ -115,6 +118,7 @@ class Main {
         basicCommands.add(ChangeNotificationCommand())
         basicCommands.add(ConfigCommand())
         basicCommands.add(ImageCommand())
+        basicCommands.add(KuGouCommand())
         The_Core_Values_Of_Chinese_Socialism.add("富强")
         The_Core_Values_Of_Chinese_Socialism.add("民主")
         The_Core_Values_Of_Chinese_Socialism.add("文明")
@@ -130,20 +134,13 @@ class Main {
     }
 
     init {
-        config.addSetting("Translate", translateFile)
-        config = Config(File(" ").canonicalPath + "config")
-        if (config.getValue("Translate") != null) {
-            translateFile = config.getValue("Translate")!!
-        }
+        init()
+        configmanager.add(Setting("Translate",translateFile))
         for (s in FileUtils.getFileAllContent1(this.javaClass.getResourceAsStream("/translate/$translateFile"))) {
             translate[s.substring(0, s.indexOf(" "))] = s.substring(s.indexOf("=") + 2)
         }
-        config.addSetting("MainName", "Small Tools")
-        config = Config(File(" ").canonicalPath + "config")
-        titleFont = Font.createFont(
-            Font.TRUETYPE_FONT,
-            Objects.requireNonNull(this.javaClass.getResourceAsStream("/assets/barkeliy-nrgog.ttf"))
-        )
+        configmanager.add("MainName", "Small Tools")
+        titleFont = Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(this.javaClass.getResourceAsStream("/assets/barkeliy-nrgog.ttf")))
         //titleFont = Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(this.getClass().getResourceAsStream("/assets/Orbitron-Regular.ttf")));
         titleFont = titleFont.deriveFont(Font.ITALIC, 64f)
         //textFont = Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(this.getClass().getResourceAsStream("/assets/LexendDeca-Regular.ttf")));
@@ -151,8 +148,7 @@ class Main {
         textFont = textFont.deriveFont(Font.TRUETYPE_FONT, 16f)
 
         icon = ImageIcon(Objects.requireNonNull(this.javaClass.getResource("/assets/icon.png")))
-        AntiBlur.init()
-        init()
+
         //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack()
         frame.isVisible = true
@@ -190,11 +186,11 @@ class Main {
         frame.addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent) {}
             override fun mousePressed(e: MouseEvent) {
-                com.github.q16695.events.MouseEvent(e.button, true).post()
+                MouseEvent(e.button, true, Vec2d(MouseInfo.getPointerInfo().location.x,MouseInfo.getPointerInfo().location.y)).post()
             }
 
             override fun mouseReleased(e: MouseEvent) {
-                com.github.q16695.events.MouseEvent(e.button, false).post()
+                MouseEvent(e.button, false, Vec2d(MouseInfo.getPointerInfo().location.x,MouseInfo.getPointerInfo().location.y)).post()
             }
 
             override fun mouseEntered(e: MouseEvent) {
@@ -214,33 +210,29 @@ class Main {
             false
         }
         TranslateManager.setTranslate(translate)
-        Thread { MessageUtils.sendNotification(translate[this.javaClass.name + ".hello1"]!!) }.start()
+
+        MessageUtils.sendNotification(translate[this.javaClass.name + ".hello1"]!!,this)
+
         frame.extendedState = JFrame.MAXIMIZED_BOTH
         setInstance()
         Thread {
             while (frame.isVisible) {
-                try {
-                    val threadEvent = ThreadEvent(5L)
-                    threadEvent.post()
-                    Thread.sleep(threadEvent.delay)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
-                }
+                val threadEvent = ThreadEvent(5L)
+                threadEvent.post()
+                Thread.sleep(threadEvent.delay)
             }
         }.start()
         Thread {
             while (frame.isVisible) {
-                try {
-                    TickEvent().post()
-                    TickEvent.Pre().post()
-                    Thread.sleep(50L)
-                    TickEvent.Post().post()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
-                }
+                TickEvent().post()
+                TickEvent.Pre().post()
+                Thread.sleep(50L)
+                TickEvent.Post().post()
             }
         }.start()
+        ready = true
         while (frame.isVisible) {
+            antiblur = AntiBlur
             if(background != null && frame.layeredPane.getIndexOf(background!!) != -1) {
                 frame.layeredPane.setLayer(background!!, Integer.MIN_VALUE)
             }
@@ -255,7 +247,6 @@ class Main {
             val color_rgb_o = Color.HSBtoRGB(tick_color[0], 0.8f, 0.8f)
             color = Color(color_rgb_o shr 16 and 0xFF, color_rgb_o shr 8 and 0xFF, color_rgb_o and 0xFF)
 
-            config = Config(File(" ").canonicalPath + "config")
             if (frame.height > 750) {
                 tip.setBounds(10, frame.height - 750, frame.width, 300)
             } else {
@@ -275,17 +266,13 @@ class Main {
             name.foreground = color
 
             //tip.setText(MainExecute.tip);
-            if(config.getValue("MainName") != null) {
-                mainName = config.getValue("MainName")!!
-            }
-            if (config.exists()) {
-                notification = config.getBooleanValue("Notification")
-            }
+            mainName = configmanager.getSetting("MainName")!!.value
             setInstance()
-            if (config.exists()) {
-                notification = config.getBooleanValue("Notification")
+            if(configmanager.getSetting("Notification") != null) {
+                notification = configmanager.getSetting("Notification")!!.value.toBoolean()
             }
         }
-        ShutdownEvent().post()
+        configmanager.save()
+        ready = false
     }
 }

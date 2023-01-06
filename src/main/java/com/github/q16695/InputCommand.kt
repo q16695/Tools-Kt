@@ -1,6 +1,6 @@
 package com.github.q16695
 
-class InputCommand(commands: String) {
+class InputCommand(var commands: String) {
     var mainCommand: String? = null
     var arguments = ArrayList<String>()
     fun hasArguments(): Boolean {
@@ -8,7 +8,6 @@ class InputCommand(commands: String) {
     }
 
     init {
-        var commands = commands
         if (commands.startsWith("/")) {
             commands = commands.substring(1)
         }
@@ -25,7 +24,7 @@ class InputCommand(commands: String) {
             arguments.add(commands.substring(index + 1, index + commands.substring(index + 1).indexOf(" ") + 1))
             commands = commands.substring(index + 1)
         }
-        if (commands.contains(" ")) {
+        if (commands.contains(" ") && !commands.endsWith(" ")) {
             arguments.add(commands.substring(commands.indexOf(" ") + 1))
         }
     }

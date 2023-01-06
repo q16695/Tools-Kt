@@ -1,6 +1,5 @@
 package com.github.q16695.modules
 
-import com.github.q16695.AntiBlur
 import com.github.q16695.InputCommand
 import com.github.q16695.Main
 import com.github.q16695.events.EventHandler
@@ -9,9 +8,7 @@ import com.github.q16695.events.ThreadEvent
 import com.github.q16695.managers.TranslateManager
 import com.github.q16695.utils.KeyBind
 import com.github.q16695.utils.MessageUtils
-import javazoom.jl.decoder.JavaLayerException
-import javazoom.jl.player.Player
-import java.awt.Color
+import com.github.q16695.utils.SoundUtil
 import java.awt.MouseInfo
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -105,20 +102,13 @@ class CheckModule : EmptyModule(true) {
     @EventHandler
     fun onMouseEvent(event: com.github.q16695.events.MouseEvent) {
         if (event.isDownMouse(com.github.q16695.events.MouseEvent.LEFT)) {
-            Thread {
-                try {
-                    val player = Player(Objects.requireNonNull(this.javaClass.getResourceAsStream("/assets/click.mp3")))
-                    player.play()
-                } catch (e: JavaLayerException) {
-                    e.printStackTrace()
-                }
-            }.start()
             if (Main.Instance!!.mouseInFrame) {
+                SoundUtil.playSoundByResource("/assets/click.mp3",true,"click")
                 if (Main.Instance!!.TCVOCS > Main.Instance!!.The_Core_Values_Of_Chinese_Socialism.size - 1) {
                     Main.Instance!!.TCVOCS = 0
                 }
                 val jLabel = JLabel(Main.Instance!!.The_Core_Values_Of_Chinese_Socialism[Main.Instance!!.TCVOCS])
-                jLabel.setBounds(MouseInfo.getPointerInfo().location.x, MouseInfo.getPointerInfo().location.y, 100, 100)
+                jLabel.setBounds(event.location.x, event.location.y, 100, 100)
                 Main.Instance!!.frame.add(jLabel)
                 Main.Instance!!.clickedList.add(jLabel)
                 Main.Instance!!.TCVOCS++
@@ -126,11 +116,28 @@ class CheckModule : EmptyModule(true) {
         }
     }
 
+    val enteredCommands = ArrayList<String>()
+
     @EventHandler
     fun onKeyboardEvent(event: KeyboardEvent) {
         if(Main.Instance == null) return
-        if (event.keyBind.isDownKey(KeyBind.ENTER)) {
-            if (!AntiBlur.active) {
+        if(event.isDownKey(KeyBind.UP)) {
+            if(!enteredCommands.contains(Main.Instance!!.command.text)) {
+                Main.Instance!!.command.text = enteredCommands.get(enteredCommands.size - 1)
+            }
+            else {
+                Main.Instance!!.command.text = enteredCommands.subList(0,enteredCommands.lastIndexOf(Main.Instance!!.command.text) - 1).get(enteredCommands.lastIndexOf(Main.Instance!!.command.text) - 1)
+            }
+        }
+        else if(event.isDownKey(KeyBind.DOWN)) {
+            if(enteredCommands.contains(Main.Instance!!.command.text) && enteredCommands.size > enteredCommands.lastIndexOf(Main.Instance!!.command.text) + 1) {
+                Main.Instance!!.command.text = enteredCommands.get(enteredCommands.lastIndexOf(Main.Instance!!.command.text) + 1)
+            }
+            else {
+                Main.Instance!!.command.text = ""
+            }
+        }
+        else if (event.isDownKey(KeyBind.ENTER)) {
                 if (Main.Instance!!.selectJLabel != null && Main.Instance!!.selectJLabel!!.text.lowercase().startsWith(Main.Instance!!.command.text.lowercase()) && Main.Instance!!.selectJLabel!!.text.lowercase() != Main.Instance!!.command.text.lowercase()) {
                     Main.Instance!!.command.text = Main.Instance!!.selectJLabel!!.text
                     Main.Instance!!.selectJLabel = null
@@ -146,12 +153,12 @@ class CheckModule : EmptyModule(true) {
                         if (File(Main.Instance!!.command.text).exists()) {
                             Main.Instance!!.enteredString = Main.Instance!!.command.text.lowercase()
                         } else {
-                            MessageUtils.sendError(TranslateManager.getTranslate(this.javaClass.name + ".error1"))
+                            MessageUtils.sendError(TranslateManager.getTranslate("${this.javaClass.name}.error1")!!,this)
                         }
                     }
+                    enteredCommands.add(Main.Instance!!.command.text)
                     Main.Instance!!.command.text = ""
                 }
-            }
         }
     }
 }
