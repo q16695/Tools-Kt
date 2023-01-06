@@ -198,29 +198,31 @@ public class Notification {
         this.show();
     }
     public void show() {
-        SwingUtil.invokeAndWaitQuietly(new Runnable() {
-            public void run() {
-                Notification notification = Notification.this;
-                ImageIcon image = notification.icon;
-                Theme theme;
-                if (notification.theme != null) {
-                    theme = notification.theme;
-                } else {
-                    theme = new Theme(Notification.TITLE_TEXT_FONT, Notification.MAIN_TEXT_FONT, notification.isDark);
-                }
+        new Thread(() -> {
+            SwingUtil.invokeAndWaitQuietly(new Runnable() {
+                public void run() {
+                    Notification notification = Notification.this;
+                    ImageIcon image = notification.icon;
+                    Theme theme;
+                    if (notification.theme != null) {
+                        theme = notification.theme;
+                    } else {
+                        theme = new Theme(Notification.TITLE_TEXT_FONT, Notification.MAIN_TEXT_FONT, notification.isDark);
+                    }
 
-                if (Notification.this.appWindow == null) {
-                    Notification.this.notifyPopup = new AsDesktop(notification, image, theme);
-                } else {
-                    Notification.this.notifyPopup = new AsApplication(notification, image, Notification.this.appWindow, theme);
+                    if (Notification.this.appWindow == null) {
+                        Notification.this.notifyPopup = new AsDesktop(notification, image, theme);
+                    } else {
+                        Notification.this.notifyPopup = new AsApplication(notification, image, Notification.this.appWindow, theme);
+                    }
+                    Notification.this.notifyPopup.setVisible(true);
+                    if (Notification.this.shakeDurationInMillis > 0) {
+                        Notification.this.notifyPopup.shake(notification.shakeDurationInMillis, notification.shakeAmplitude);
+                    }
                 }
-                Notification.this.notifyPopup.setVisible(true);
-                if (Notification.this.shakeDurationInMillis > 0) {
-                    Notification.this.notifyPopup.shake(notification.shakeDurationInMillis, notification.shakeAmplitude);
-                }
-            }
-        });
-        this.icon = null;
+            });
+            this.icon = null;
+        }).start();
     }
 
     public Notification shake(final int durationInMillis, final int amplitude) {

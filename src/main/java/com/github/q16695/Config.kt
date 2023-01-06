@@ -1,7 +1,6 @@
 package com.github.q16695
 
 import com.github.q16695.utils.FileUtils
-import com.github.q16695.utils.setValue
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException

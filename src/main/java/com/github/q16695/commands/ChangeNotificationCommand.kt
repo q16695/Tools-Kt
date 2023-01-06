@@ -4,6 +4,7 @@ import com.github.q16695.BasicCommand
 import com.github.q16695.Config
 import com.github.q16695.Main
 import com.github.q16695.events.EventHandler
+import com.github.q16695.managers.ConfigManager
 import com.github.q16695.managers.EventManager
 import com.github.q16695.managers.TranslateManager
 import com.github.q16695.utils.Key
@@ -21,22 +22,16 @@ class ChangeNotificationCommand : BasicCommand("notification", "change the notif
     }
 
     override fun onExecute() {
-        try {
-            val file = File(File(" ").canonicalPath + "config")
-            val config = Config(file.canonicalPath)
-            if (config.getValue("Notification") == null) {
-                if (Main.notification) config.addSetting("Notification", "false")
-                if (!Main.notification) config.addSetting("Notification", "true")
-            }
-            if (Main.notification) {
-                config.setValue("Notification", "false")
-                sendInformation(TranslateManager.getTranslate(Key("disabled", this)))
-            } else {
-                config.setValue("Notification", "true")
-                sendNotification(TranslateManager.getTranslate(Key("enabled", this))!!)
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
+        if (Main.Instance!!.configmanager.getValue("Notification") == null) {
+            if (Main.notification) Main.Instance!!.configmanager.add("Notification", "false")
+            if (!Main.notification) Main.Instance!!.configmanager.add("Notification", "true")
+        }
+        if (Main.notification) {
+            Main.Instance!!.configmanager.setSetting("Notification", "false")
+            sendInformation(TranslateManager.getTranslate("${this.javaClass.name}.disabled")!!, obj = this)
+        } else {
+            Main.Instance!!.configmanager.setSetting("Notification", "true")
+            sendNotification(TranslateManager.getTranslate("${this.javaClass.name}.enabled")!!, obj = this)
         }
         super.onExecute()
     }

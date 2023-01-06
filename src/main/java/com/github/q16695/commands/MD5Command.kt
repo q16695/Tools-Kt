@@ -6,14 +6,15 @@ import com.github.q16695.events.EventHandler
 import com.github.q16695.managers.EventManager
 import com.github.q16695.managers.TranslateManager
 import com.github.q16695.utils.Key
+import com.github.q16695.utils.MessageUtils.sendError
 import com.github.q16695.utils.MessageUtils.sendInformation
 
 class MD5Command : BasicCommand("md5", "encryption the string") {
     var extra: String? = null
     @EventHandler
     fun onTickEvent() {
-        if (TranslateManager.getTranslate(Key("description", this.javaClass)) != null) {
-            description = TranslateManager.getTranslate(Key("description", this.javaClass))!!
+        if (TranslateManager.getTranslate("${this.javaClass.name}.description") != null) {
+            description = TranslateManager.getTranslate("${this.javaClass.name}.description")!!
         }
     }
 
@@ -28,9 +29,9 @@ class MD5Command : BasicCommand("md5", "encryption the string") {
 
     override fun onExecute() {
         if (extra != " ") {
-            sendInformation(MD5(extra!!))
+            sendInformation(MD5(extra!!)!!,this)
         } else {
-            sendInformation(TranslateManager.getTranslate(Key("error", this.javaClass)))
+            sendError(TranslateManager.getTranslate("${this.javaClass.name}.error")!!,this)
         }
         super.onExecute()
     }

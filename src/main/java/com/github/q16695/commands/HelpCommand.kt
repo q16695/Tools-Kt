@@ -3,7 +3,6 @@ package com.github.q16695.commands
 import com.github.q16695.BasicCommand
 import com.github.q16695.Main
 import com.github.q16695.events.EventHandler
-import com.github.q16695.events.TickEvent
 import com.github.q16695.managers.EventManager
 import com.github.q16695.managers.TranslateManager
 import com.github.q16695.utils.MessageUtils.send
@@ -15,7 +14,7 @@ class HelpCommand : BasicCommand("help", "get the commands list") {
     }
 
     @EventHandler
-    fun onTickEvent(event: TickEvent?) {
+    fun onTickEvent() {
         if (TranslateManager.getTranslate(this.javaClass.name + ".description") != null) {
             description = TranslateManager.getTranslate(this.javaClass.name + ".description")!!
         }
@@ -23,11 +22,11 @@ class HelpCommand : BasicCommand("help", "get the commands list") {
 
     companion object {
         fun sendHelpList() {
-            val m = ArrayList<String?>()
+            val m = ArrayList<String>()
             for (e in Main.Instance!!.basicCommands) {
                 m.add("/" + e.name + ", " + e.description)
             }
-            send(m)
+            send(m, obj = this)
         }
     }
 

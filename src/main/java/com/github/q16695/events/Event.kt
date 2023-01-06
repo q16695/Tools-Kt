@@ -1,10 +1,11 @@
 package com.github.q16695.events
 
-import com.github.q16695.Main
+import com.github.q16695.managers.EventManager
 
 open class Event {
+    var cancel = false
     fun post() {
-        Main.Instance!!.eventManager.post(this)
+        EventManager.post(this)
     }
 
     enum class Stage {

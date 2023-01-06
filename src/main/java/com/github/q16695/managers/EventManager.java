@@ -5,6 +5,7 @@ import com.github.q16695.events.EventHandler;
 import com.github.q16695.events.TickEvent;
 import com.github.q16695.modules.CheckModule;
 import com.github.q16695.modules.EmptyModule;
+import com.github.q16695.modules.MainListener;
 import com.github.q16695.modules.RightModule;
 
 import java.lang.reflect.InvocationTargetException;
@@ -13,25 +14,28 @@ import java.util.ArrayList;
 
 public class EventManager {
     private static ArrayList<EmptyModule> listeners = new ArrayList<>();
-    private static ArrayList<Object> aListeners = new ArrayList<>();
+    private static ArrayList<Object> EVENT_BUS = new ArrayList<>();
 
     public EventManager() {
         listeners.add(new CheckModule());
         listeners.add(new RightModule());
+        EVENT_BUS.add(new MainListener());
     }
 
     public static void register(Object obj) {
-        aListeners.add(obj);
+        if(!EVENT_BUS.contains(obj)) {
+            EVENT_BUS.add(obj);
+        }
     }
 
     public static void unregister(Object obj) {
-        aListeners.remove(obj.getClass());
+        EVENT_BUS.remove(obj.getClass());
     }
 
-    /** if it dont have parameters, default post TickEvent */
-    public void aPost(Event event) throws InvocationTargetException, IllegalAccessException, ClassNotFoundException {
-        if(aListeners.isEmpty()) return;
-        for(Object obj : aListeners) {
+    /** if a object dont have parameters, default post TickEvent */
+    public static void aPost(Event event) throws InvocationTargetException, IllegalAccessException, ClassNotFoundException {
+        if(EVENT_BUS.isEmpty()) return;
+        for(Object obj : EVENT_BUS) {
             Class<?> clazz = obj.getClass();
             for(Method method : clazz.getMethods()) {
                 if(!method.getReturnType().isAssignableFrom(void.class)) continue;
@@ -50,7 +54,7 @@ public class EventManager {
         }
     }
 
-    public void post(Event event) {
+    public static void post(Event event) {
         if(listeners.isEmpty()) return;
         for(EmptyModule l : listeners) {
             l.onEvent(event);

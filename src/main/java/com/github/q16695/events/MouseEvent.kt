@@ -1,6 +1,8 @@
 package com.github.q16695.events
 
-class MouseEvent(var keyCode: Int, var pressed: Boolean) : Event() {
+import com.github.q16695.utils.Vec2d
+
+class MouseEvent(val keyCode: Int, val pressed: Boolean, val location : Vec2d) : Event() {
     fun isDownMouse(key: Int): Boolean {
         return keyCode == key && pressed
     }
